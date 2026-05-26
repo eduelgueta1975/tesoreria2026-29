@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de Cuotas — 1° Medio</title>
+  <meta name="description" content="Portal de cuotas y finanzas del curso Primero Medio. Consulta el estado de tus pagos y las finanzas generales del curso." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════ LOGIN ═══════════════════════════════════ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-bg">
+      <div class="login-orb orb1"></div>
+      <div class="login-orb orb2"></div>
+      <div class="login-orb orb3"></div>
+    </div>
+    <div class="login-card glass">
+      <div class="login-logo">
+        <div class="logo-icon">🎓</div>
+        <h1>Portal de Cuotas</h1>
+        <p class="login-subtitle">1° Medio &nbsp;·&nbsp; 2026</p>
+      </div>
+
+      <!-- Selector de rol -->
+      <div class="role-selector" id="role-selector">
+        <button class="role-btn active" id="btn-apoderado" onclick="selectRole('apoderado')">
+          <span class="role-icon">👨‍👩‍👧</span>
+          <span>Soy Apoderado</span>
+        </button>
+        <button class="role-btn" id="btn-tesorero" onclick="selectRole('tesorero')">
+          <span class="role-icon">💼</span>
+          <span>Soy Tesorero</span>
+        </button>
+      </div>
+
+      <!-- Formulario apoderado -->
+      <div id="form-apoderado" class="login-form">
+        <label class="field-label">Nombre del alumno/a</label>
+        <div class="search-wrapper">
+          <input type="text" id="search-alumno" class="field-input" placeholder="Buscar por nombre…" oninput="filterAlumnos(this.value)" autocomplete="off" />
+          <div id="alumno-dropdown" class="dropdown hidden"></div>
+        </div>
+        <div id="selected-alumno-info" class="selected-chip hidden">
+          <span id="selected-alumno-name"></span>
+          <button onclick="clearAlumnoSelection()" class="chip-clear">✕</button>
+        </div>
+
+        <div id="password-section" class="hidden">
+          <label class="field-label" id="password-label">Contraseña</label>
+          <input type="password" id="apoderado-password" class="field-input" placeholder="••••••••" />
+          <p id="new-account-hint" class="hint-text hidden">Primera vez aquí. Crea tu contraseña para acceder.</p>
+          <button id="btn-login-apoderado" class="btn-primary" onclick="loginApoderado()">
+            <span id="login-btn-text">Ingresar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario tesorero -->
+      <div id="form-tesorero" class="login-form hidden">
+        <label class="field-label">Clave de administrador</label>
+        <input type="password" id="admin-password" class="field-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginAdmin()" />
+        <button class="btn-primary" onclick="loginAdmin()">Ingresar como Tesorero</button>
+      </div>
+
+      <p id="login-error" class="error-msg hidden"></p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ PORTAL APODERADO ═══════════════════════ -->
+  <div id="screen-apoderado" class="screen">
+    <nav class="topnav glass">
+      <div class="nav-brand">
+        <span class="nav-logo">🎓</span>
+        <div>
+          <span class="nav-title">Portal de Cuotas</span>
+          <span class="nav-sub">1° Medio 2026</span>
+        </div>
+      </div>
+      <div class="nav-user">
+        <span id="nav-alumno-name" class="nav-username"></span>
+        <button class="btn-logout" onclick="logout()">Salir</button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <!-- Tarjetas de resumen personal -->
+      <section class="section-header">
+        <h2 class="section-title">Mi Estado de Cuenta</h2>
+        <button class="btn-sync" onclick="syncData()" title="Actualizar desde Google Sheets">
+          <span id="sync-icon">↻</span> Sincronizar
+        </button>
+      </section>
+
+      <div class="cards-row" id="apod-summary-cards">
+        <div class="stat-card glass">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#10b981,#059669)">💰</div>
+          <div class="stat-info">
+            <span class="stat-label">Cuenta Individual</span>
+            <span class="stat-value" id="apod-cuenta"></span>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#6366f1,#4f46e5)">✅</div>
+          <div class="stat-info">
+            <span class="stat-label">Cuotas Pagadas</span>
+            <span class="stat-value" id="apod-pagadas"></span>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#f59e0b,#d97706)">⏳</div>
+          <div class="stat-info">
+            <span class="stat-label">Cuotas Pendientes</span>
+            <span class="stat-value" id="apod-pendientes"></span>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#ec4899,#db2777)">📅</div>
+          <div class="stat-info">
+            <span class="stat-label">Próximo Vencimiento</span>
+            <span class="stat-value" id="apod-proximo"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle cuotas mensuales -->
+      <div class="cards-row-2">
+        <div class="panel glass">
+          <h3 class="panel-title">📋 Mis Cuotas Mensuales</h3>
+          <div id="apod-cuotas-grid" class="cuotas-grid"></div>
+        </div>
+
+        <div class="panel glass">
+          <h3 class="panel-title">📊 Finanzas del Curso</h3>
+          <div class="course-finance-summary" id="apod-course-summary"></div>
+          <canvas id="chart-apod-curso" height="180"></canvas>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══════════════════════════════════ PANEL TESORERO ════════════════════════ -->
+  <div id="screen-admin" class="screen">
+    <nav class="topnav glass">
+      <div class="nav-brand">
+        <span class="nav-logo">💼</span>
+        <div>
+          <span class="nav-title">Panel del Tesorero</span>
+          <span class="nav-sub">1° Medio 2026</span>
+        </div>
+      </div>
+      <div class="nav-user">
+        <span class="nav-username">Administrador</span>
+        <button class="btn-sync" onclick="syncData()" title="Actualizar desde Google Sheets">
+          <span id="sync-icon-admin">↻</span> Sincronizar
+        </button>
+        <button class="btn-logout" onclick="logout()">Salir</button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <section class="section-header">
+        <h2 class="section-title">Resumen Financiero del Curso</h2>
+        <span id="last-update" class="last-update-label"></span>
+      </section>
+
+      <!-- KPIs admin -->
+      <div class="cards-row" id="admin-kpi-cards">
+        <div class="stat-card glass kpi-green">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#10b981,#059669)">💵</div>
+          <div class="stat-info">
+            <span class="stat-label">Total Recaudado</span>
+            <span class="stat-value" id="admin-recaudado"></span>
+          </div>
+        </div>
+        <div class="stat-card glass kpi-blue">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#3b82f6,#2563eb)">🏦</div>
+          <div class="stat-info">
+            <span class="stat-label">Saldo Disponible</span>
+            <span class="stat-value" id="admin-saldo"></span>
+          </div>
+        </div>
+        <div class="stat-card glass kpi-red">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#ef4444,#dc2626)">🧾</div>
+          <div class="stat-info">
+            <span class="stat-label">Gastos Totales</span>
+            <span class="stat-value" id="admin-gastos"></span>
+          </div>
+        </div>
+        <div class="stat-card glass kpi-purple">
+          <div class="stat-icon" style="background: linear-gradient(135deg,#a855f7,#9333ea)">📈</div>
+          <div class="stat-info">
+            <span class="stat-label">% Alumnos al día</span>
+            <span class="stat-value" id="admin-cobranza"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos admin -->
+      <div class="cards-row-2">
+        <div class="panel glass">
+          <h3 class="panel-title">📊 Recaudación Mensual</h3>
+          <canvas id="chart-admin-mensual" height="200"></canvas>
+        </div>
+        <div class="panel glass">
+          <h3 class="panel-title">🥧 Estado de Pagos</h3>
+          <canvas id="chart-admin-estado" height="200"></canvas>
+          <div id="legend-estado" class="chart-legend"></div>
+        </div>
+      </div>
+
+      <!-- Tabla de alumnos -->
+      <div class="panel glass full-width">
+        <div class="panel-header">
+          <h3 class="panel-title">👥 Estado de Cuotas por Alumno</h3>
+          <div class="panel-actions">
+            <input type="text" id="admin-search" class="field-input small" placeholder="Buscar alumno…" oninput="filterAdminTable(this.value)" />
+            <button class="btn-export" onclick="exportCSV()">⬇ Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="admin-table" class="data-table">
+            <thead id="admin-table-head"></thead>
+            <tbody id="admin-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
