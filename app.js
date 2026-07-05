@@ -60,8 +60,22 @@ function selectAlumno(idx) {
   const hasAccount = !!accounts[idx];
   document.getElementById('password-label').textContent = hasAccount ? 'Contraseña' : 'Crear contraseña';
   document.getElementById('new-account-hint').classList.toggle('hidden', hasAccount);
+  document.getElementById('btn-forgot-password').classList.toggle('hidden', !hasAccount);
   document.getElementById('login-btn-text').textContent = hasAccount ? 'Ingresar' : 'Crear cuenta e ingresar';
   clearError();
+}
+
+function resetPassword() {
+  if (!selectedAlumno) return;
+  if (confirm('¿Olvidaste tu contraseña actual? Al aceptar, se borrará la clave guardada en este dispositivo y podrás crear una nueva. ¿Deseas continuar?')) {
+    const accounts = loadAccounts();
+    delete accounts[selectedAlumno.idx];
+    saveAccounts(accounts);
+    document.getElementById('apoderado-password').value = '';
+    // Refrescar el formulario simulando que seleccionó al alumno nuevamente
+    selectAlumno(selectedAlumno.idx);
+    toast('Contraseña reseteada. Ahora ingresa tu nueva clave.');
+  }
 }
 
 function clearAlumnoSelection() {
